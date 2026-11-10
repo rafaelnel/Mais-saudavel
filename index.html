@@ -15,6 +15,19 @@
   </head>
   <body class="bg-slate-950 text-slate-100 antialiased selection:bg-emerald-500/20 selection:text-emerald-300">
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" id="app-entry">
+      if (window.location.hostname.endsWith('.github.io')) {
+        const css = document.createElement('link');
+        css.rel = 'stylesheet';
+        css.href = './dist/assets/index.css';
+        document.head.appendChild(css);
+        const script = document.createElement('script');
+        script.type = 'module';
+        script.src = './dist/assets/index.js';
+        document.body.appendChild(script);
+      } else {
+        import('/src/main.tsx');
+      }
+    </script>
   </body>
 </html>
