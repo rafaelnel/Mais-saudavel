@@ -1,0 +1,364 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global Safety Net (Default Deny)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Global Hardened Primitives
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isVerifiedUser() {
+      return isSignedIn();
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_-]+$');
+    }
+
+    function isValidDateStr(d) {
+      return d is string && d.size() == 10 && d.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+    }
+
+    function userProfileExists(uid) {
+      return exists(/databases/$(database)/documents/users/$(uid));
+    }
+
+    // 1. UserProfile Blueprint Validation
+    function isValidUserProfile(data) {
+      return data.keys().hasAll([
+        'uid', 'displayName', 'sex', 'age', 'heightCm', 'currentWeightKg',
+        'targetWeightKg', 'activityFactor', 'goalType', 'dailyCalorieAdjustment',
+        'stepGoal', 'waterGoalMl', 'googleFitConnected', 'appleHealthConnected',
+        'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'uid', 'displayName', 'sex', 'age', 'heightCm', 'currentWeightKg',
+        'targetWeightKg', 'activityFactor', 'goalType', 'dailyCalorieAdjustment',
+        'stepGoal', 'waterGoalMl', 'googleFitConnected', 'appleHealthConnected',
+        'createdAt', 'updatedAt'
+      ]) &&
+      data.uid is string && data.uid.size() >= 1 && data.uid.size() <= 128 && data.uid.matches('^[a-zA-Z0-9_-]+$') &&
+      data.uid == request.auth.uid &&
+      data.displayName is string && data.displayName.size() >= 1 && data.displayName.size() <= 80 &&
+      data.sex is string && (data.sex == 'male' || data.sex == 'female') &&
+      data.age is number && data.age >= 10 && data.age <= 120 &&
+      data.heightCm is number && data.heightCm >= 100 && data.heightCm <= 250 &&
+      data.currentWeightKg is number && data.currentWeightKg >= 25 && data.currentWeightKg <= 350 &&
+      data.targetWeightKg is number && data.targetWeightKg >= 25 && data.targetWeightKg <= 350 &&
+      data.activityFactor is number && data.activityFactor >= 1.1 && data.activityFactor <= 2.5 &&
+      data.goalType is string && (data.goalType == 'lose' || data.goalType == 'maintain' || data.goalType == 'gain') &&
+      data.dailyCalorieAdjustment is number && data.dailyCalorieAdjustment >= -1500 && data.dailyCalorieAdjustment <= 1500 &&
+      data.stepGoal is number && data.stepGoal >= 1000 && data.stepGoal <= 50000 &&
+      data.waterGoalMl is number && data.waterGoalMl >= 500 && data.waterGoalMl <= 10000 &&
+      data.googleFitConnected is bool &&
+      data.appleHealthConnected is bool &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // 2. MealEntry Blueprint Validation
+    function isValidMealEntry(data) {
+      return data.keys().hasAll([
+        'userId', 'date', 'mealType', 'name', 'grams', 'calories',
+        'proteinG', 'carbsG', 'fatG', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'userId', 'date', 'mealType', 'name', 'grams', 'calories',
+        'proteinG', 'carbsG', 'fatG', 'createdAt', 'updatedAt'
+      ]) &&
+      data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 && data.userId.matches('^[a-zA-Z0-9_-]+$') &&
+      data.userId == request.auth.uid &&
+      isValidDateStr(data.date) &&
+      data.mealType is string && (
+        data.mealType == 'breakfast' || data.mealType == 'lunch' ||
+        data.mealType == 'snack' || data.mealType == 'dinner' ||
+        data.mealType == 'pre_workout' || data.mealType == 'post_workout'
+      ) &&
+      data.name is string && data.name.size() >= 1 && data.name.size() <= 120 &&
+      data.grams is number && data.grams >= 1 && data.grams <= 5000 &&
+      data.calories is number && data.calories >= 0 && data.calories <= 10000 &&
+      data.proteinG is number && data.proteinG >= 0 && data.proteinG <= 1000 &&
+      data.carbsG is number && data.carbsG >= 0 && data.carbsG <= 1000 &&
+      data.fatG is number && data.fatG >= 0 && data.fatG <= 1000 &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // 3. WorkoutEntry Blueprint Validation
+    function isValidWorkoutEntry(data) {
+      return data.keys().hasAll([
+        'userId', 'date', 'activityName', 'category', 'durationMinutes',
+        'met', 'caloriesBurned', 'source', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'userId', 'date', 'activityName', 'category', 'durationMinutes',
+        'met', 'caloriesBurned', 'source', 'createdAt', 'updatedAt'
+      ]) &&
+      data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 && data.userId.matches('^[a-zA-Z0-9_-]+$') &&
+      data.userId == request.auth.uid &&
+      isValidDateStr(data.date) &&
+      data.activityName is string && data.activityName.size() >= 1 && data.activityName.size() <= 120 &&
+      data.category is string && (
+        data.category == 'cardio' || data.category == 'strength' ||
+        data.category == 'hiit' || data.category == 'sports' ||
+        data.category == 'mobility' || data.category == 'sync'
+      ) &&
+      data.durationMinutes is number && data.durationMinutes >= 1 && data.durationMinutes <= 1440 &&
+      data.met is number && data.met >= 1 && data.met <= 25 &&
+      data.caloriesBurned is number && data.caloriesBurned >= 1 && data.caloriesBurned <= 15000 &&
+      data.source is string && (
+        data.source == 'manual' || data.source == 'google_fit' || data.source == 'apple_health'
+      ) &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // 4. WeightEntry Blueprint Validation
+    function isValidWeightEntry(data) {
+      return data.keys().hasAll([
+        'userId', 'date', 'weightKg', 'note', 'source', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'userId', 'date', 'weightKg', 'note', 'source', 'createdAt', 'updatedAt'
+      ]) &&
+      data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 && data.userId.matches('^[a-zA-Z0-9_-]+$') &&
+      data.userId == request.auth.uid &&
+      isValidDateStr(data.date) &&
+      data.weightKg is number && data.weightKg >= 25 && data.weightKg <= 350 &&
+      data.note is string && data.note.size() >= 0 && data.note.size() <= 200 &&
+      data.source is string && (
+        data.source == 'manual' || data.source == 'google_fit' || data.source == 'apple_health'
+      ) &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // 5. TodoItem Blueprint Validation
+    function isValidTodoItem(data) {
+      return data.keys().hasAll([
+        'userId', 'title', 'category', 'scope', 'targetDate',
+        'completed', 'lastCompletedDate', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'userId', 'title', 'category', 'scope', 'targetDate',
+        'completed', 'lastCompletedDate', 'createdAt', 'updatedAt'
+      ]) &&
+      data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 && data.userId.matches('^[a-zA-Z0-9_-]+$') &&
+      data.userId == request.auth.uid &&
+      data.title is string && data.title.size() >= 1 && data.title.size() <= 160 &&
+      data.category is string && (
+        data.category == 'nutrition' || data.category == 'workout' ||
+        data.category == 'hydration' || data.category == 'habit' ||
+        data.category == 'measurement'
+      ) &&
+      data.scope is string && (data.scope == 'daily' || data.scope == 'date_specific') &&
+      isValidDateStr(data.targetDate) &&
+      data.completed is bool &&
+      data.lastCompletedDate is string && data.lastCompletedDate.size() <= 10 &&
+      (data.lastCompletedDate == '' || data.lastCompletedDate.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')) &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // 6. DailyMetric Blueprint Validation
+    function isValidDailyMetric(data) {
+      return data.keys().hasAll([
+        'userId', 'date', 'steps', 'activeCalories', 'waterMl',
+        'sleepHours', 'restingHeartRate', 'syncSource', 'createdAt', 'updatedAt'
+      ]) &&
+      data.keys().hasOnly([
+        'userId', 'date', 'steps', 'activeCalories', 'waterMl',
+        'sleepHours', 'restingHeartRate', 'syncSource', 'createdAt', 'updatedAt'
+      ]) &&
+      data.userId is string && data.userId.size() >= 1 && data.userId.size() <= 128 && data.userId.matches('^[a-zA-Z0-9_-]+$') &&
+      data.userId == request.auth.uid &&
+      isValidDateStr(data.date) &&
+      data.steps is number && data.steps >= 0 && data.steps <= 200000 &&
+      data.activeCalories is number && data.activeCalories >= 0 && data.activeCalories <= 15000 &&
+      data.waterMl is number && data.waterMl >= 0 && data.waterMl <= 15000 &&
+      data.sleepHours is number && data.sleepHours >= 0 && data.sleepHours <= 24 &&
+      data.restingHeartRate is number && data.restingHeartRate >= 0 && data.restingHeartRate <= 250 &&
+      data.syncSource is string && (
+        data.syncSource == 'manual' || data.syncSource == 'google_fit' ||
+        data.syncSource == 'apple_health' || data.syncSource == 'combined'
+      ) &&
+      data.createdAt is timestamp &&
+      data.updatedAt is timestamp;
+    }
+
+    // Collection: /users/{userId}
+    match /users/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && userId == request.auth.uid;
+      allow list: if false;
+      allow create: if isVerifiedUser() &&
+        isValidId(userId) &&
+        userId == request.auth.uid &&
+        isValidUserProfile(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isVerifiedUser() &&
+        isValidId(userId) &&
+        userId == request.auth.uid &&
+        isValidUserProfile(incoming()) &&
+        incoming().uid == existing().uid &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          // Action: Update Metabolic Profile & Goals
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'displayName', 'sex', 'age', 'heightCm', 'currentWeightKg',
+            'targetWeightKg', 'activityFactor', 'goalType', 'dailyCalorieAdjustment',
+            'stepGoal', 'waterGoalMl', 'googleFitConnected', 'appleHealthConnected',
+            'updatedAt'
+          ])
+        );
+      allow delete: if false;
+    }
+
+    // Collection: /meals/{mealId}
+    match /meals/{mealId} {
+      allow get: if isSignedIn() && isValidId(mealId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isVerifiedUser() &&
+        isValidId(mealId) &&
+        isValidMealEntry(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        userProfileExists(incoming().userId);
+      allow update: if isVerifiedUser() &&
+        isValidId(mealId) &&
+        isValidMealEntry(incoming()) &&
+        existing().userId == request.auth.uid &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          // Action: Edit Meal Entry
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'date', 'mealType', 'name', 'grams', 'calories',
+            'proteinG', 'carbsG', 'fatG', 'updatedAt'
+          ])
+        );
+      allow delete: if isVerifiedUser() && isValidId(mealId) && existing().userId == request.auth.uid;
+    }
+
+    // Collection: /workouts/{workoutId}
+    match /workouts/{workoutId} {
+      allow get: if isSignedIn() && isValidId(workoutId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isVerifiedUser() &&
+        isValidId(workoutId) &&
+        isValidWorkoutEntry(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        userProfileExists(incoming().userId);
+      allow update: if isVerifiedUser() &&
+        isValidId(workoutId) &&
+        isValidWorkoutEntry(incoming()) &&
+        existing().userId == request.auth.uid &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          // Action: Edit Workout Entry
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'date', 'activityName', 'category', 'durationMinutes',
+            'met', 'caloriesBurned', 'source', 'updatedAt'
+          ])
+        );
+      allow delete: if isVerifiedUser() && isValidId(workoutId) && existing().userId == request.auth.uid;
+    }
+
+    // Collection: /weights/{weightId}
+    match /weights/{weightId} {
+      allow get: if isSignedIn() && isValidId(weightId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isVerifiedUser() &&
+        isValidId(weightId) &&
+        isValidWeightEntry(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        userProfileExists(incoming().userId);
+      allow update: if isVerifiedUser() &&
+        isValidId(weightId) &&
+        isValidWeightEntry(incoming()) &&
+        existing().userId == request.auth.uid &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          // Action: Update Weight Record
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'date', 'weightKg', 'note', 'source', 'updatedAt'
+          ])
+        );
+      allow delete: if isVerifiedUser() && isValidId(weightId) && existing().userId == request.auth.uid;
+    }
+
+    // Collection: /todos/{todoId}
+    match /todos/{todoId} {
+      allow get: if isSignedIn() && isValidId(todoId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isVerifiedUser() &&
+        isValidId(todoId) &&
+        isValidTodoItem(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        userProfileExists(incoming().userId);
+      allow update: if isVerifiedUser() &&
+        isValidId(todoId) &&
+        isValidTodoItem(incoming()) &&
+        existing().userId == request.auth.uid &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          // Action 1: Toggle Completion Status
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'completed', 'lastCompletedDate', 'updatedAt'
+          ]) ||
+          // Action 2: Edit Task Details
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title', 'category', 'scope', 'targetDate', 'completed', 'lastCompletedDate', 'updatedAt'
+          ])
+        );
+      allow delete: if isVerifiedUser() && isValidId(todoId) && existing().userId == request.auth.uid;
+    }
+
+    // Collection: /dailyMetrics/{metricId}
+    match /dailyMetrics/{metricId} {
+      allow get: if isSignedIn() && isValidId(metricId) && existing().userId == request.auth.uid;
+      allow list: if isSignedIn() && existing().userId == request.auth.uid;
+      allow create: if isVerifiedUser() &&
+        isValidId(metricId) &&
+        isValidDailyMetric(incoming()) &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time &&
+        userProfileExists(incoming().userId);
+      allow update: if isVerifiedUser() &&
+        isValidId(metricId) &&
+        isValidDailyMetric(incoming()) &&
+        existing().userId == request.auth.uid &&
+        incoming().userId == existing().userId &&
+        incoming().date == existing().date &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time && (
+          // Action: Update Daily Steps, Hydration, or Health Telemetry
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'steps', 'activeCalories', 'waterMl', 'sleepHours',
+            'restingHeartRate', 'syncSource', 'updatedAt'
+          ])
+        );
+      allow delete: if isVerifiedUser() && isValidId(metricId) && existing().userId == request.auth.uid;
+    }
+  }
+}

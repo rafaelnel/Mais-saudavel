@@ -1,0 +1,6 @@
+{
+  "name": "Metabolix — Controle Basal, Nutrição, Treino & Saúde",
+  "description": "Plataforma inteligente de cálculo de Taxa Metabólica Basal (TMB), balanço calórico de refeições e exercícios, previsão de evolução corporal, metas diárias e sincronização com Google Fit e Apple Health.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

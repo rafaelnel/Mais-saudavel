@@ -1,0 +1,466 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Metabolic parameters, basal rate settings, and wearable integration status for a user.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID of the owner.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Display name of the user.",
+          "minLength": 1,
+          "maxLength": 80
+        },
+        "sex": {
+          "type": "string",
+          "description": "Biological sex for Mifflin-St Jeor and Harris-Benedict BMR formulas.",
+          "enum": ["male", "female"]
+        },
+        "age": {
+          "type": "number",
+          "description": "Age in years (10 to 120)."
+        },
+        "heightCm": {
+          "type": "number",
+          "description": "Height in centimeters (100 to 250)."
+        },
+        "currentWeightKg": {
+          "type": "number",
+          "description": "Current weight in kilograms (25 to 350)."
+        },
+        "targetWeightKg": {
+          "type": "number",
+          "description": "Target weight in kilograms (25 to 350)."
+        },
+        "activityFactor": {
+          "type": "number",
+          "description": "Physical activity multiplier (1.1 to 2.5)."
+        },
+        "goalType": {
+          "type": "string",
+          "description": "Primary body composition objective.",
+          "enum": ["lose", "maintain", "gain"]
+        },
+        "dailyCalorieAdjustment": {
+          "type": "number",
+          "description": "Planned daily caloric deficit or surplus (-1500 to 1500 kcal)."
+        },
+        "stepGoal": {
+          "type": "number",
+          "description": "Daily step target (1000 to 50000)."
+        },
+        "waterGoalMl": {
+          "type": "number",
+          "description": "Daily water intake target in milliliters (500 to 10000)."
+        },
+        "googleFitConnected": {
+          "type": "boolean",
+          "description": "Whether Google Fit synchronization is enabled."
+        },
+        "appleHealthConnected": {
+          "type": "boolean",
+          "description": "Whether Apple Health synchronization is enabled."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the profile was created."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when the profile was last updated."
+        }
+      },
+      "required": [
+        "uid",
+        "displayName",
+        "sex",
+        "age",
+        "heightCm",
+        "currentWeightKg",
+        "targetWeightKg",
+        "activityFactor",
+        "goalType",
+        "dailyCalorieAdjustment",
+        "stepGoal",
+        "waterGoalMl",
+        "googleFitConnected",
+        "appleHealthConnected",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "MealEntry": {
+      "title": "MealEntry",
+      "description": "A logged meal item with macronutrient and caloric breakdown.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner UID referencing /users/{userId}.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "date": {
+          "type": "string",
+          "description": "ISO calendar date YYYY-MM-DD.",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "mealType": {
+          "type": "string",
+          "description": "Meal slot of the day.",
+          "enum": ["breakfast", "lunch", "snack", "dinner", "pre_workout", "post_workout"]
+        },
+        "name": {
+          "type": "string",
+          "description": "Food or meal description.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "grams": {
+          "type": "number",
+          "description": "Portion weight in grams (1 to 5000)."
+        },
+        "calories": {
+          "type": "number",
+          "description": "Total energy in kcal (0 to 10000)."
+        },
+        "proteinG": {
+          "type": "number",
+          "description": "Protein in grams (0 to 1000)."
+        },
+        "carbsG": {
+          "type": "number",
+          "description": "Carbohydrates in grams (0 to 1000)."
+        },
+        "fatG": {
+          "type": "number",
+          "description": "Fats in grams (0 to 1000)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "userId",
+        "date",
+        "mealType",
+        "name",
+        "grams",
+        "calories",
+        "proteinG",
+        "carbsG",
+        "fatG",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "WorkoutEntry": {
+      "title": "WorkoutEntry",
+      "description": "A logged physical exercise or synced activity session with MET and burned calories.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner UID referencing /users/{userId}.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "date": {
+          "type": "string",
+          "description": "ISO calendar date YYYY-MM-DD.",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "activityName": {
+          "type": "string",
+          "description": "Name of the workout or exercise.",
+          "minLength": 1,
+          "maxLength": 120
+        },
+        "category": {
+          "type": "string",
+          "description": "Exercise modality.",
+          "enum": ["cardio", "strength", "hiit", "sports", "mobility", "sync"]
+        },
+        "durationMinutes": {
+          "type": "number",
+          "description": "Duration in minutes (1 to 1440)."
+        },
+        "met": {
+          "type": "number",
+          "description": "Metabolic Equivalent of Task (1 to 25)."
+        },
+        "caloriesBurned": {
+          "type": "number",
+          "description": "Estimated energy expenditure in kcal (1 to 15000)."
+        },
+        "source": {
+          "type": "string",
+          "description": "Origin of the workout record.",
+          "enum": ["manual", "google_fit", "apple_health"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "userId",
+        "date",
+        "activityName",
+        "category",
+        "durationMinutes",
+        "met",
+        "caloriesBurned",
+        "source",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "WeightEntry": {
+      "title": "WeightEntry",
+      "description": "A body weight check-in record used to compare real progress against metabolic predictions.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner UID referencing /users/{userId}.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "date": {
+          "type": "string",
+          "description": "ISO calendar date YYYY-MM-DD.",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "weightKg": {
+          "type": "number",
+          "description": "Measured weight in kilograms (25 to 350)."
+        },
+        "note": {
+          "type": "string",
+          "description": "Optional context note (e.g. fasting morning weigh-in).",
+          "minLength": 0,
+          "maxLength": 200
+        },
+        "source": {
+          "type": "string",
+          "description": "Measurement source.",
+          "enum": ["manual", "google_fit", "apple_health"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "userId",
+        "date",
+        "weightKg",
+        "note",
+        "source",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "TodoItem": {
+      "title": "TodoItem",
+      "description": "A recurring daily goal or a date-specific task.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner UID referencing /users/{userId}.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "title": {
+          "type": "string",
+          "description": "Task or habit description.",
+          "minLength": 1,
+          "maxLength": 160
+        },
+        "category": {
+          "type": "string",
+          "description": "Goal domain.",
+          "enum": ["nutrition", "workout", "hydration", "habit", "measurement"]
+        },
+        "scope": {
+          "type": "string",
+          "description": "Whether this goal repeats every day ('daily') or applies only to a single date ('date_specific').",
+          "enum": ["daily", "date_specific"]
+        },
+        "targetDate": {
+          "type": "string",
+          "description": "ISO calendar date YYYY-MM-DD for date_specific tasks or creation date for daily goals.",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "completed": {
+          "type": "boolean",
+          "description": "Completion state."
+        },
+        "lastCompletedDate": {
+          "type": "string",
+          "description": "YYYY-MM-DD when last completed (or empty string if never completed).",
+          "minLength": 0,
+          "maxLength": 10,
+          "pattern": "^(\\d{4}-\\d{2}-\\d{2})?$"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "category",
+        "scope",
+        "targetDate",
+        "completed",
+        "lastCompletedDate",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "DailyMetric": {
+      "title": "DailyMetric",
+      "description": "Daily steps, active calories, hydration, sleep, and heart rate synced from Google Fit, Apple Health, or manual entry.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner UID referencing /users/{userId}.",
+          "minLength": 1,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "date": {
+          "type": "string",
+          "description": "ISO calendar date YYYY-MM-DD.",
+          "minLength": 10,
+          "maxLength": 10,
+          "pattern": "^\\d{4}-\\d{2}-\\d{2}$"
+        },
+        "steps": {
+          "type": "number",
+          "description": "Daily step count (0 to 200000)."
+        },
+        "activeCalories": {
+          "type": "number",
+          "description": "NEAT/Step active calories burned (0 to 15000)."
+        },
+        "waterMl": {
+          "type": "number",
+          "description": "Water consumed in ml (0 to 15000)."
+        },
+        "sleepHours": {
+          "type": "number",
+          "description": "Hours of sleep (0 to 24)."
+        },
+        "restingHeartRate": {
+          "type": "number",
+          "description": "Resting heart rate in bpm (0 to 250)."
+        },
+        "syncSource": {
+          "type": "string",
+          "description": "Data source for the daily telemetry.",
+          "enum": ["manual", "google_fit", "apple_health", "combined"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server creation timestamp."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server update timestamp."
+        }
+      },
+      "required": [
+        "userId",
+        "date",
+        "steps",
+        "activeCalories",
+        "waterMl",
+        "sleepHours",
+        "restingHeartRate",
+        "syncSource",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Stores each user's metabolic profile and wearable connection flags."
+    },
+    "/meals/{mealId}": {
+      "schema": { "$ref": "#/entities/MealEntry" },
+      "description": "Stores daily meal items and macronutrients per user."
+    },
+    "/workouts/{workoutId}": {
+      "schema": { "$ref": "#/entities/WorkoutEntry" },
+      "description": "Stores daily workouts and exercise energy expenditure per user."
+    },
+    "/weights/{weightId}": {
+      "schema": { "$ref": "#/entities/WeightEntry" },
+      "description": "Stores body weight logs for trajectory and prediction comparison."
+    },
+    "/todos/{todoId}": {
+      "schema": { "$ref": "#/entities/TodoItem" },
+      "description": "Stores recurring daily goals ('daily') and specific day tasks ('date_specific')."
+    },
+    "/dailyMetrics/{metricId}": {
+      "schema": { "$ref": "#/entities/DailyMetric" },
+      "description": "Stores daily steps, hydration, sleep, and heart rate metrics synced from Google Fit and Apple Health."
+    }
+  }
+}
