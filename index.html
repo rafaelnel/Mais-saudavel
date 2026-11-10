@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%2319191E'/%3E%3Cpath d='M6 21C9 15 13 11 16 11C19 11 23 15 26 21' stroke='%238AC4F2' stroke-width='3' stroke-linecap='round' fill='none'/%3E%3Cpath d='M9 24C11.5 19 14 16 16 16C18 16 20.5 19 23 24' stroke='%23DDA3E6' stroke-width='2.5' stroke-linecap='round' fill='none'/%3E%3C/svg%3E" />
     <title>Metabolix — Controle Basal, Nutrição, Treino &amp; Saúde</title>
     <meta name="description" content="Plataforma inteligente de cálculo de Taxa Metabólica Basal (TMB), balanço calórico de refeições e exercícios, previsão de evolução corporal, metas diárias e sincronização com Google Fit e Apple Health." />
     <meta property="og:title" content="Metabolix — Controle Basal, Nutrição, Treino &amp; Saúde" />
@@ -19,11 +20,11 @@
       if (window.location.hostname.endsWith('.github.io')) {
         const css = document.createElement('link');
         css.rel = 'stylesheet';
-        css.href = './dist/assets/index.css';
+        css.href = './public/bundle/app.css';
         document.head.appendChild(css);
         const script = document.createElement('script');
         script.type = 'module';
-        script.src = './dist/assets/index.js';
+        script.src = './public/bundle/app.js';
         document.body.appendChild(script);
       } else {
         import('/src/main.tsx');

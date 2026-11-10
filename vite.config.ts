@@ -1,5 +1,6 @@
 import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
+import fs from 'fs';
 import path from 'path';
 import {defineConfig} from 'vite';
 
@@ -18,6 +19,18 @@ export default defineConfig(() => {
               '<script type="module" src="/src/main.tsx"></script>'
             );
           },
+        },
+        closeBundle() {
+          const outBundleDir = path.resolve(__dirname, 'public/bundle');
+          const jsSrc = path.resolve(__dirname, 'dist/assets/index.js');
+          const cssSrc = path.resolve(__dirname, 'dist/assets/index.css');
+          fs.mkdirSync(outBundleDir, { recursive: true });
+          if (fs.existsSync(jsSrc)) {
+            fs.copyFileSync(jsSrc, path.resolve(outBundleDir, 'app.js'));
+          }
+          if (fs.existsSync(cssSrc)) {
+            fs.copyFileSync(cssSrc, path.resolve(outBundleDir, 'app.css'));
+          }
         },
       },
       react(),
