@@ -52,7 +52,7 @@ export async function ensureUserProfile(
 
   const defaultProfile: Omit<UserProfile, 'createdAt' | 'updatedAt'> = {
     uid: safeUid,
-    displayName: (customInitialData?.displayName || displayName || 'Atleta Metabolix').trim().slice(0, 80) || 'Atleta Metabolix',
+    displayName: (customInitialData?.displayName || displayName || 'Atleta Mais Saudável').trim().slice(0, 80) || 'Atleta Mais Saudável',
     sex: customInitialData?.sex === 'female' ? 'female' : 'male',
     age: clamp(customInitialData?.age ?? 30, 10, 120),
     heightCm: clamp(customInitialData?.heightCm ?? 176, 100, 250),

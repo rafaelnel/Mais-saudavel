@@ -86,6 +86,7 @@ import { HealthHubModal } from './components/HealthHubModal';
 import { ConfirmDialog } from './components/ConfirmDialog';
 import { AuthModal } from './components/AuthModal';
 import { DietPlannerView } from './components/DietPlannerView';
+import { PWAInstallButton, OfflineIndicator } from './components/PWAInstallButton';
 
 type ActiveSection = 'overview' | 'diet' | 'meals' | 'workouts' | 'weight' | 'todos';
 
@@ -734,12 +735,15 @@ export default function App() {
         >
           <BrandWaveMark className="w-6 h-6 text-[#8AC4F2]" />
           <span className={theme === 'dark' ? 'text-white' : 'text-slate-900'}>
-            Metabolix
+            Mais Saudável
           </span>
         </a>
 
-        {/* User Account, Theme Mode Toggle & Wearable Sync */}
+        {/* User Account, Theme Mode Toggle, PWA Install & Wearable Sync */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* PWA In-App Install Button */}
+          <PWAInstallButton theme={theme} />
+
           {/* Theme Toggle Button (Claro / Escuro) */}
           <button
             type="button"
@@ -816,6 +820,9 @@ export default function App() {
         </div>
       </header>
 
+      {/* Offline Mode Indicator */}
+      <OfflineIndicator />
+
       {/* Main Content Viewport */}
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-3 overflow-y-auto flex flex-col justify-start">
         {/* On-Page Date Filter Toolbar */}
@@ -868,7 +875,7 @@ export default function App() {
                 onClick={() => setSelectedDate(todayISO)}
                 className="px-3 py-1 text-xs font-bold text-[#1B1C20] bg-[#F3E3CA] hover:bg-white rounded-full transition-colors whitespace-nowrap shadow-xs"
               >
-                Hoje
+                Ir para hoje
               </button>
             )}
           </div>

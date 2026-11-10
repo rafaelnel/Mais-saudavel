@@ -100,7 +100,7 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
         onClose();
       } else {
         // Mode === 'signup'
-        const cleanName = displayName.trim() || 'Atleta Metabolix';
+        const cleanName = displayName.trim() || 'Atleta Mais Saudável';
         const user = await signUpWithEmail(email, password, cleanName);
 
         // Compute daily adjustment based on goal
@@ -185,7 +185,7 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
             </div>
             <div>
               <h2 className="text-xl font-bold font-display tracking-tight text-white flex items-center gap-2">
-                Metabolix
+                Mais Saudável
                 <span className="text-[10px] font-sans font-medium px-2 py-0.5 rounded-full bg-[#8AC4F2]/20 text-[#8AC4F2]">
                   Perfil &amp; Nuvem
                 </span>
@@ -537,7 +537,7 @@ export function AuthModal({ open, onClose, onSuccess }: AuthModalProps) {
 
         {/* Footer note */}
         <div className="px-6 py-3.5 bg-black/40 border-t border-white/5 text-[11px] text-white/40 flex items-center justify-between">
-          <span>Metabolix Cloud · Firestore Security Hardened</span>
+          <span>Mais Saudável Cloud · Firestore Security Hardened</span>
           <span className="flex items-center gap-1 text-[#8AC4F2]">
             <Flame className="w-3 h-3" />
             Dados 100% isolados
