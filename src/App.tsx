@@ -87,6 +87,7 @@ import { ConfirmDialog } from './components/ConfirmDialog';
 import { AuthModal } from './components/AuthModal';
 import { DietPlannerView } from './components/DietPlannerView';
 import { PWAInstallButton, OfflineIndicator } from './components/PWAInstallButton';
+import { MacrosDonutChart } from './components/MacrosDonutChart';
 
 type ActiveSection = 'overview' | 'diet' | 'meals' | 'workouts' | 'weight' | 'todos';
 
@@ -1511,7 +1512,20 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="mt-4 space-y-2.5 max-h-[340px] overflow-y-auto pr-1">
+                <div className="mt-4">
+                  <MacrosDonutChart
+                    consumedProteinG={metabolicSummary.consumedProteinG}
+                    targetProteinG={metabolicSummary.targetProteinG}
+                    consumedCarbsG={metabolicSummary.consumedCarbsG}
+                    targetCarbsG={metabolicSummary.targetCarbsG}
+                    consumedFatG={metabolicSummary.consumedFatG}
+                    targetFatG={metabolicSummary.targetFatG}
+                    consumedCalories={metabolicSummary.consumedCalories}
+                    targetCalories={metabolicSummary.targetIntakeCalories}
+                  />
+                </div>
+
+                <div className="space-y-2.5 max-h-[210px] overflow-y-auto pr-1">
                   {dayMeals.length === 0 ? (
                     <div className="py-12 text-center text-xs text-slate-400">
                       Nenhuma refeição lançada em {selectedDate}.
