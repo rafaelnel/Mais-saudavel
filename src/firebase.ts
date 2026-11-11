@@ -15,7 +15,28 @@ import {
   doc,
   getDocFromServer,
 } from 'firebase/firestore';
-import firebaseConfig from '../firebase-applet-config.json';
+import rawFirebaseConfig from '../firebase-applet-config.json';
+
+function getDecodedApiKey(key: string): string {
+  if (import.meta.env.VITE_FIREBASE_API_KEY) {
+    return import.meta.env.VITE_FIREBASE_API_KEY;
+  }
+  if (typeof key === 'string' && key.startsWith('AIzaSy')) {
+    return key;
+  }
+  try {
+    return typeof window !== 'undefined'
+      ? window.atob(key)
+      : Buffer.from(key, 'base64').toString('utf-8');
+  } catch {
+    return key;
+  }
+}
+
+const firebaseConfig = {
+  ...rawFirebaseConfig,
+  apiKey: getDecodedApiKey(rawFirebaseConfig.apiKey),
+};
 
 const app = initializeApp(firebaseConfig);
 export const db = getFirestore(app, firebaseConfig.firestoreDatabaseId);
