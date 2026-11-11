@@ -6,6 +6,8 @@ interface WeightEvolutionChartProps {
   weights: WeightEntry[];
   targetWeightKg: number;
   forecast: WeightForecastAnalysis;
+  selectedHorizon?: 30 | 60 | 90;
+  onSelectHorizon?: (horizon: 30 | 60 | 90) => void;
 }
 
 export const BrandWaveMark: React.FC<{ className?: string }> = ({ className = 'w-6 h-6' }) => (
@@ -35,8 +37,17 @@ export const WeightEvolutionChart: React.FC<WeightEvolutionChartProps> = ({
   weights,
   targetWeightKg,
   forecast,
+  selectedHorizon: controlledHorizon,
+  onSelectHorizon,
 }) => {
-  const [mode, setMode] = useState<'blocks' | 'curve'>('blocks');
+  const [mode, setMode] = useState<'curve' | 'blocks'>('curve');
+  const [internalHorizon, setInternalHorizon] = useState<30 | 60 | 90>(90);
+
+  const horizon = controlledHorizon ?? internalHorizon;
+  const handleHorizonChange = (h: 30 | 60 | 90) => {
+    setInternalHorizon(h);
+    onSelectHorizon?.(h);
+  };
 
   const sorted = [...weights].sort((a, b) => a.date.localeCompare(b.date));
   const recentWeights = sorted.slice(-4);
@@ -44,6 +55,7 @@ export const WeightEvolutionChart: React.FC<WeightEvolutionChartProps> = ({
   const todayISO = formatDateISO();
   const future30ISO = addDaysISO(todayISO, 30);
   const future60ISO = addDaysISO(todayISO, 60);
+  const future90ISO = addDaysISO(todayISO, 90);
 
   const actualPoints =
     recentWeights.length > 0
@@ -62,7 +74,14 @@ export const WeightEvolutionChart: React.FC<WeightEvolutionChartProps> = ({
           },
         ];
 
-  // Build 5 columns for the Lavender Block Matrix (matching the 5 columns in the reference image)
+  const horizonProjectedKg =
+    horizon === 30
+      ? forecast.projected30DaysPlannedKg
+      : horizon === 60
+      ? forecast.projected60DaysPlannedKg
+      : forecast.projected90DaysPlannedKg;
+
+  // Build 5 columns for the Lavender Block Matrix
   const blockColumns = [
     {
       header: actualPoints[0]?.label || 'Início',
@@ -79,14 +98,17 @@ export const WeightEvolutionChart: React.FC<WeightEvolutionChartProps> = ({
     {
       header: '+30d',
       valueLabel: `${forecast.projected30DaysPlannedKg.toFixed(1)}`,
-      blocks: 3,
-      waveIndex: 2, // Center column displays the signature wave icon in the top block
+      blocks: horizon === 30 ? 5 : 3,
+      waveIndex: horizon === 30 ? 2 : -1,
     },
     {
-      header: '+60d',
-      valueLabel: `${forecast.projected60DaysPlannedKg.toFixed(1)}`,
-      blocks: 5,
-      waveIndex: -1,
+      header: horizon === 90 ? '+90d' : '+60d',
+      valueLabel: `${(horizon === 90
+        ? forecast.projected90DaysPlannedKg
+        : forecast.projected60DaysPlannedKg
+      ).toFixed(1)}`,
+      blocks: horizon >= 60 ? 5 : 4,
+      waveIndex: horizon >= 60 ? 2 : -1,
     },
     {
       header: 'Meta',
@@ -96,11 +118,37 @@ export const WeightEvolutionChart: React.FC<WeightEvolutionChartProps> = ({
     },
   ];
 
+  // Build projected milestones based on selected horizon (30, 60, or 90 days)
+  const projectedMilestones = [
+    {
+      date: future30ISO,
+      label: '+30d',
+      weight: forecast.projected30DaysPlannedKg,
+    },
+    ...(horizon >= 60
+      ? [
+          {
+            date: future60ISO,
+            label: '+60d',
+            weight: forecast.projected60DaysPlannedKg,
+          },
+        ]
+      : []),
+    ...(horizon === 90
+      ? [
+          {
+            date: future90ISO,
+            label: '+90d',
+            weight: forecast.projected90DaysPlannedKg,
+          },
+        ]
+      : []),
+  ];
+
   // SVG Curve coordinates
   const allValues = [
     ...actualPoints.map((p) => p.weight),
-    forecast.projected30DaysPlannedKg,
-    forecast.projected60DaysPlannedKg,
+    ...projectedMilestones.map((p) => p.weight),
     targetWeightKg,
   ];
 
@@ -109,15 +157,15 @@ export const WeightEvolutionChart: React.FC<WeightEvolutionChartProps> = ({
   const range = Math.max(4, maxVal - minVal);
 
   const width = 560;
-  const height = 210;
+  const height = 215;
   const padLeft = 42;
-  const padRight = 24;
-  const padTop = 22;
-  const padBottom = 30;
+  const padRight = 28;
+  const padTop = 24;
+  const padBottom = 32;
   const plotW = width - padLeft - padRight;
   const plotH = height - padTop - padBottom;
 
-  const totalSlots = actualPoints.length + 2;
+  const totalSlots = actualPoints.length + projectedMilestones.length;
   const getX = (index: number) => {
     if (totalSlots <= 1) return padLeft + plotW / 2;
     return padLeft + (index / (totalSlots - 1)) * plotW;
@@ -132,20 +180,11 @@ export const WeightEvolutionChart: React.FC<WeightEvolutionChartProps> = ({
 
   const projCoords = [
     actualCoords[actualCoords.length - 1],
-    {
-      date: future30ISO,
-      label: '+30d',
-      weight: forecast.projected30DaysPlannedKg,
-      x: getX(actualPoints.length),
-      y: getY(forecast.projected30DaysPlannedKg),
-    },
-    {
-      date: future60ISO,
-      label: '+60d',
-      weight: forecast.projected60DaysPlannedKg,
-      x: getX(actualPoints.length + 1),
-      y: getY(forecast.projected60DaysPlannedKg),
-    },
+    ...projectedMilestones.map((m, idx) => ({
+      ...m,
+      x: getX(actualPoints.length + idx),
+      y: getY(m.weight),
+    })),
   ];
 
   const actualPath = actualCoords
@@ -158,17 +197,37 @@ export const WeightEvolutionChart: React.FC<WeightEvolutionChartProps> = ({
 
   return (
     <div className="w-full">
-      <div className="flex items-center justify-between mb-3">
-        <span className="text-xs font-medium text-[#4A2050]/80">
-           evolução em kg (Histórico → +30d → +60d → Meta)
-        </span>
-        <button
-          type="button"
-          onClick={() => setMode(mode === 'blocks' ? 'curve' : 'blocks')}
-          className="px-3 py-1 rounded-full bg-white/80 hover:bg-white text-[#3B1940] text-[11px] font-semibold transition-colors shadow-2xs whitespace-nowrap shrink-0"
-        >
-          {mode === 'blocks' ? 'Ver Curva Linear' : 'Ver Blocos'}
-        </button>
+      <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
+        {/* Horizon Toggle: 30, 60, 90 days */}
+        <div className="flex items-center gap-1 bg-white/50 p-1 rounded-full">
+          {([30, 60, 90] as const).map((days) => (
+            <button
+              key={days}
+              type="button"
+              onClick={() => handleHorizonChange(days)}
+              className={`px-3 py-1 rounded-full text-[11px] font-bold font-mono transition-all ${
+                horizon === days
+                  ? 'bg-[#582B5E] text-white shadow-xs'
+                  : 'text-[#3B1940]/80 hover:bg-white/60'
+              }`}
+            >
+              {days} dias
+            </button>
+          ))}
+        </div>
+
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] font-mono font-bold text-[#3B1940] hidden sm:inline">
+            Projeção +{horizon}d: {horizonProjectedKg.toFixed(1)} kg
+          </span>
+          <button
+            type="button"
+            onClick={() => setMode(mode === 'blocks' ? 'curve' : 'blocks')}
+            className="px-3 py-1 rounded-full bg-white/80 hover:bg-white text-[#3B1940] text-[11px] font-semibold transition-colors shadow-2xs whitespace-nowrap shrink-0"
+          >
+            {mode === 'blocks' ? 'Ver Curva Linear' : 'Ver Blocos'}
+          </button>
+        </div>
       </div>
 
       {mode === 'blocks' ? (
@@ -185,7 +244,7 @@ export const WeightEvolutionChart: React.FC<WeightEvolutionChartProps> = ({
             ))}
           </div>
 
-          {/* 5-Row Matrix of Rounded Blocks (matching the Lavender Analytics screen) */}
+          {/* 5-Row Matrix of Rounded Blocks */}
           <div className="grid grid-cols-5 gap-2 items-end h-48">
             {blockColumns.map((col, colIdx) => {
               return (
@@ -199,7 +258,7 @@ export const WeightEvolutionChart: React.FC<WeightEvolutionChartProps> = ({
                         <div
                           key={bIdx}
                           className="h-9 rounded-[14px] border border-[#582B5E]/40 bg-[#582B5E]/15 flex items-center justify-center text-[#582B5E]"
-                          title={`Projeção 30d: ${col.valueLabel} kg`}
+                          title={`Projeção: ${col.valueLabel} kg`}
                         >
                           <BrandWaveMark className="w-6 h-6" />
                         </div>
@@ -230,7 +289,15 @@ export const WeightEvolutionChart: React.FC<WeightEvolutionChartProps> = ({
           </div>
         </div>
       ) : (
-        <div className="w-full overflow-x-auto bg-white/35 rounded-2xl p-3 border border-[#582B5E]/20">
+        <div className="w-full overflow-x-auto bg-white/45 rounded-2xl p-3 border border-[#582B5E]/20">
+          <div className="flex items-center justify-between text-[10px] font-medium text-[#3B1940]/80 mb-1 px-1">
+            <span className="flex items-center gap-1.5">
+              <span className="w-2.5 h-0.5 bg-[#1B1C20] inline-block" /> Pesagens Reais
+              <span className="w-2.5 h-0.5 bg-[#582B5E] border-b border-dashed border-[#582B5E] inline-block ml-2" />{' '}
+              Projeção Wishnofsky (7.700 kcal/kg)
+            </span>
+            <span className="font-mono font-bold">Horizonte: {horizon}d</span>
+          </div>
           <svg
             viewBox={`0 0 ${width} ${height}`}
             className="w-full h-44 select-none overflow-visible"
@@ -259,7 +326,7 @@ export const WeightEvolutionChart: React.FC<WeightEvolutionChartProps> = ({
               d={projPath}
               fill="none"
               stroke="#582B5E"
-              strokeWidth="2.25"
+              strokeWidth="2.5"
               strokeDasharray="5 5"
             />
             <path
@@ -304,7 +371,7 @@ export const WeightEvolutionChart: React.FC<WeightEvolutionChartProps> = ({
                 <circle
                   cx={pt.x}
                   cy={pt.y}
-                  r="4.5"
+                  r="5"
                   className="fill-[#582B5E] stroke-white"
                   strokeWidth="2"
                 />
